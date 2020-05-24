@@ -4,6 +4,15 @@ package org.map4j.coordinates;
 /**
  * An interface implemented by any object that can be expressed
  * as a point in the tile coordinate system.
+ * <p>Similar to pixel space, Tile Space represents the actual tile column and tile
+ * row number.  The "origin" of Tile Space is (0,0). where the column zero is the left most tile column.
+ * For the ROW, however, there are two standards: 
+ * <ol><li>"XYZ", used by Google, Bing, OpenStreetMap, etc. places
+ * row zero at the TOP of the map with increasing numbers going downward.</li>
+ * <li>"TMS" places the zero row at the BOTTOM of the map with increasing numbers going upward.  TMS is used
+ * in the popular storage file format MBTiles.</li>
+ * </ol>
+ *  
  * @author Joel Kozikowski
  */
 public interface ITileCoordinate {
