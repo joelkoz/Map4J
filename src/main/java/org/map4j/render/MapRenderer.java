@@ -106,6 +106,14 @@ public class MapRenderer implements TileTopicListener {
             this.setDisplayDimensions(this.displayWidth, this.displayHeight);
         }
         
+        if (wCenter != null) {
+            // We were previously displaying a location. Refresh
+            // that.
+            pCenter = null;
+            tCenter = null;
+            recalcLocation(wCenter);
+        }
+        
         this.displayImage = null;
     }
     
@@ -318,7 +326,6 @@ public class MapRenderer implements TileTopicListener {
     public synchronized MapImage getDisplayImage() {
 
         if (displayImage == null) {
-
             PCoordinate pTileGridUL = tileGridUL.asP();
             
             int subImageCenterX = pCenter.getPixelX() - pTileGridUL.getPixelX();
