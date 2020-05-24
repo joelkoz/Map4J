@@ -1,5 +1,5 @@
 # Map4J
-A tile based moving map rendering system for Java
+A tile based moving map rendering library for Java
 
 This project is still a work in progress. See the "src/examples/java" directory for a working code example.
 
