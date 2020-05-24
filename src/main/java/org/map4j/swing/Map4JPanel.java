@@ -151,7 +151,11 @@ public class Map4JPanel extends JPanel implements ComponentListener, MapRenderer
     }
     
    
+    public void clearRenderCache() {
+        this.render.clearRenderCache();
+    }
 
+    
     @Override
     public void onPublish(String topic, MapRenderer payload) {
         repaint();

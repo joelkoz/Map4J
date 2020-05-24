@@ -101,17 +101,22 @@ public class MapRenderer implements TileTopicListener {
         }
         
         this.tileController = newController;
+
+        clearRenderCache();
+    }
+    
+    
+    /**
+     * Clears the rendering cache and forces a re-render of the entire image.
+     */
+    public synchronized void clearRenderCache() {
+        pCenter = null;
+        tCenter = null;
+        tileGridUL = null;
+        tileGrid = null;
         
         if (this.displayWidth > 0 && this.displayHeight > 0) {
             this.setDisplayDimensions(this.displayWidth, this.displayHeight);
-        }
-        
-        if (wCenter != null) {
-            // We were previously displaying a location. Refresh
-            // that.
-            pCenter = null;
-            tCenter = null;
-            recalcLocation(wCenter);
         }
         
         this.displayImage = null;
