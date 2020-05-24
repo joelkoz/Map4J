@@ -102,7 +102,10 @@ public class MapRenderer implements TileTopicListener {
         
         this.tileController = newController;
 
-        clearRenderCache();
+        if (this.displayWidth > 0 && this.displayHeight > 0) {
+            this.setDisplayDimensions(this.displayWidth, this.displayHeight);
+        }
+
     }
     
     
@@ -114,10 +117,6 @@ public class MapRenderer implements TileTopicListener {
         tCenter = null;
         tileGridUL = null;
         tileGrid = null;
-        
-        if (this.displayWidth > 0 && this.displayHeight > 0) {
-            this.setDisplayDimensions(this.displayWidth, this.displayHeight);
-        }
         
         this.displayImage = null;
     }
@@ -131,6 +130,7 @@ public class MapRenderer implements TileTopicListener {
         this.displayWidth = displayWidth;
         this.displayHeight = displayHeight;
         
+        clearRenderCache();
         
         // Figure out the size in pixels of a square image that can be rotated and shifted by
         // one tile yet still fill the entire display.
