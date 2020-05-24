@@ -75,4 +75,8 @@ public class TileLoaderController {
         return tileLoader.getMaxZoom();
     }
     
+    @Override
+    public String toString() {
+       return tileLoader.toString();  
+    }
 }
