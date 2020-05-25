@@ -411,6 +411,8 @@ public class MapRenderer implements TileTopicListener {
     
     public void setMapLayersVisible(boolean visible) {
         layersVisible = visible;
+        displayImage = null;
+        broker.publish(TOPIC_CHANGED, this);
     }
     
 }
