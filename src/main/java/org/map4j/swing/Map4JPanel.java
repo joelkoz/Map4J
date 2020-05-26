@@ -51,9 +51,17 @@ public class Map4JPanel extends JPanel implements MapRendererTopicListener {
     protected void paintComponent(Graphics g) {
         if (this.getPosition() != null) {
             Graphics2D g2d = (Graphics2D) g.create();
-            MapImage img = this.render.getDisplayImage();
-            img.drawImageHeadsUp(heading, g2d);
-            g2d.dispose();
+            try {
+                MapImage img = this.render.getDisplayImage();
+                img.drawImageHeadsUp(heading, g2d);
+            }
+            catch (Exception ex) {
+               ex.printStackTrace(System.err);
+               super.paintComponent(g);
+            }
+            finally {
+               g2d.dispose();
+            }
         }
         else {
             super.paintComponent(g);
