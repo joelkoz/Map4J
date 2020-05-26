@@ -2,8 +2,6 @@ package org.map4j.swing;
 
 import java.awt.Graphics;
 import java.awt.Graphics2D;
-import java.awt.event.ComponentEvent;
-import java.awt.event.ComponentListener;
 
 import javax.swing.JPanel;
 
@@ -21,7 +19,7 @@ import org.map4j.render.MapRenderer.MapRendererTopicListener;
  * 
  * @author Joel Kozikowski
  */
-public class Map4JPanel extends JPanel implements ComponentListener, MapRendererTopicListener {
+public class Map4JPanel extends JPanel implements MapRendererTopicListener {
 
     private MapRenderer render;
     private int heading;
@@ -37,7 +35,6 @@ public class Map4JPanel extends JPanel implements ComponentListener, MapRenderer
     
     public Map4JPanel(int initialZoom, TileLoaderController tileController) {
         this.render = new MapRenderer(initialZoom, tileController);
-        this.addComponentListener(this);
         MapRenderer.broker.subscribe(MapRenderer.TOPIC_CHANGED, this);
     }
 
@@ -65,23 +62,12 @@ public class Map4JPanel extends JPanel implements ComponentListener, MapRenderer
 
     
     @Override
-    public void componentResized(ComponentEvent e) {
-        this.render.setDisplayDimensions(this.getWidth(), this.getHeight());
+    public void setSize(int width, int height) {
+        super.setSize(width, height); 
+        this.render.setDisplayDimensions(width, height);
     }
-
-    @Override
-    public void componentMoved(ComponentEvent e) {
-    }
-
-    @Override
-    public void componentShown(ComponentEvent e) {
-    }
-
-    @Override
-    public void componentHidden(ComponentEvent e) {
-    }
-
-
+    
+    
     /**
      * Returns the current display heading (in degrees 0..359) where 0 is "North up"
      */
