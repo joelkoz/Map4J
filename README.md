@@ -3,6 +3,8 @@ A tile based moving map rendering library for Java
 
 This project is still a work in progress. See the "src/examples/java" directory for a working code example.
 
+For a complete application framework that uses Map4J, see [Nav4J](https://github.com/joelkoz/Nav4J)
+
 ## Background
 
 This project is heavily influenced by the original jmapviewer project from the OpenStreeMaps group. The tile
