@@ -2,7 +2,11 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.map4j</groupId>
   <artifactId>map4j</artifactId>
-  <version>0.0.1-SNAPSHOT</version>
+  <version>0.5</version>
   <name>Map4j</name>
   <description>Mapping library for Java</description>
+  <properties>
+	    <maven.compiler.target>1.8</maven.compiler.target>
+	    <maven.compiler.source>1.8</maven.compiler.source>
+  </properties>  
 </project>
