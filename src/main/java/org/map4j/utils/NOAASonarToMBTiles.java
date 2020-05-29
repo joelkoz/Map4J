@@ -94,11 +94,16 @@ public class NOAASonarToMBTiles implements Runnable, Tile.TileTopicListener {
                     }
                     
                     TCoordinate tc = tileset.t1.getT(col, row);
-                    Tile tile = new Tile(sourceId, tc);
-                    System.out.println("Requesting tile " + tc.getRequestPath());
-                    ITileLoaderJob job = tileLoader.createTileLoaderJob(tile);
-                    job.startTileLoad();
-                    tileJobs++;
+                    if (mbTiles.getTile(zoom, col, tc.getRowAsTMS()) == null) {
+                        Tile tile = new Tile(sourceId, tc);
+                        System.out.println("Requesting tile " + tc.getRequestPath());
+                        ITileLoaderJob job = tileLoader.createTileLoaderJob(tile);
+                        job.startTileLoad();
+                        tileJobs++;
+                    }
+                    else {
+                        System.out.println("Skipping pre-existing tile " + zoom + "/" + col + " /" + row);
+                    }
                     
                 } // for col
             } // for row
