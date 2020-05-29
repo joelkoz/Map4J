@@ -36,6 +36,15 @@ public class MapServiceToMBTiles implements Runnable, Tile.TileTopicListener {
     protected String tilesetDescription;
     protected long startTime;
     
+    /**
+     * @param mapService A map service used to download tiles from
+     * @param downloadArea The geographic area to download
+     * @param zoom The zoom level to use
+     * @param useXYZ Does the mapService use XYZ tile coordinates (FALSE for TMS)
+     * @param tilesetName A short name for the tileset (follow most programming language rules for variable identifiers)
+     * @param tilesetDescription A human readable description of the tileset
+     * @param mbtFileName The name of the .mbtiles file on the file system (can contain filesystem path if desired)
+     */
     public MapServiceToMBTiles(MapService mapService, WBox downloadArea, int zoom,
                                boolean useXYZ,
                                String tilesetName, String tilesetDescription, 
