@@ -31,21 +31,21 @@ public class MapMarkerImage extends MapMarkerCircle {
 
     /**
      * Constructs a map maker image where the marker image is taken from sourceImage, assumed
-     * to be a grid of square tiles imageSize x imageSize, with the desired image located at
-     * the index imageIndex. The index is calculated as so:<p>
+     * to be a grid of rectangular tiles imageWidth x imageHeight, with the desired image 
+     * located at the index imageIndex. The index is calculated as so:<p>
      * <code>
      *   index = rowNumber * numberOfColumns + columnNumber;
      * </code>
      * where column zero, row zero is in the upper left hand corner of the source image.
      */
-    public MapMarkerImage(BufferedImage imageSource, int imageSize, int imageIndex, String name, double lat, double lon) {
-        super(name, lat, lon, imageSize);
+    public MapMarkerImage(BufferedImage imageSource, int imageWidth, int imageHeight, int imageIndex, String name, double lat, double lon) {
+        super(name, lat, lon, Math.max(imageWidth, imageHeight));
         
-        int numOfColumns = imageSource.getWidth() / imageSize;
+        int numOfColumns = imageSource.getWidth() / imageWidth;
         int row = imageIndex / numOfColumns;
         int col = imageIndex % numOfColumns;
         
-        this.markerImage = imageSource.getSubimage(col * imageSize, row * imageSize, imageSize, imageSize);
+        this.markerImage = imageSource.getSubimage(col * imageWidth, row * imageHeight, imageWidth, imageHeight);
     }
 
     

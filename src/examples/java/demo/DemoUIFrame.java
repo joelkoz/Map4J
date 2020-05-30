@@ -52,7 +52,7 @@ public class DemoUIFrame extends JFrame {
         
         BufferedImage iconSource = ImageUtils.loadResourceImage("/images/markers/underwater-icons.png");
         
-        boca.add(new MapMarkerImage(iconSource, 78, 13, "Dive #1", 26.3356, -80.058));
+        boca.add(new MapMarkerImage(iconSource, 78, 78, 13, "Dive #1", 26.3356, -80.058));
 
         this.getMapPanel().setLayerRoot(markerSet);
     }
