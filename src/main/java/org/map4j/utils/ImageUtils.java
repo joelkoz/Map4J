@@ -30,9 +30,44 @@ public class ImageUtils {
      * a database.  null is returned if the conversion could not be done.
      */
     public static byte[] getImageAsPng(BufferedImage image) {
+        return getImageAs(image, "PNG");
+    }
+    
+    
+    
+    public static boolean savePng(BufferedImage image, String fileName) {
+        return saveAs(image, fileName, "PNG");
+    }
+
+
+
+    /**
+     * Returns the specified image as an array of bytes that represents
+     * the image as a JPG file. This is useful when storing images in
+     * a database.  null is returned if the conversion could not be done.
+     */
+    public static byte[] getImageAsJpg(BufferedImage image) {
+        return getImageAs(image, "JPG");
+    }
+    
+    
+    
+    public static boolean saveJpg(BufferedImage image, String fileName) {
+        return saveAs(image, fileName, "JPG");
+    }
+
+
+    
+    
+    /**
+     * Returns the specified image as an array of bytes that represents
+     * the image formatted as formatName. This is useful when storing images in
+     * a database.  null is returned if the conversion could not be done.
+     */
+    public static byte[] getImageAs(BufferedImage image, String formatName) {
         try {
             try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
-                ImageIO.write(image, "PNG", out);
+                ImageIO.write(image, formatName, out);
                 return out.toByteArray();
             }
         }
@@ -43,10 +78,10 @@ public class ImageUtils {
     }
     
     
-    public static boolean savePng(BufferedImage image, String fileName) {
+    public static boolean saveAs(BufferedImage image, String fileName, String formatName) {
         boolean saved = false;
         try {
-            ImageIO.write(image, "PNG", new FileOutputStream(new File(fileName)));
+            ImageIO.write(image, formatName, new FileOutputStream(new File(fileName)));
             saved = true;
         } catch (Exception e) {
             System.err.println(e.getMessage());
@@ -54,6 +89,7 @@ public class ImageUtils {
         return saved;
     }
 
+    
     
     /**
      * Rotates an arbitrary image of an arbitrary dimension by degRotation degrees.
