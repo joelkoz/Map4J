@@ -18,7 +18,7 @@ import org.map4j.coordinates.PCoordinate;
  * 
  * @author Joel Kozikowski
  */
-public class MapImage {
+public class DisplayImage {
 
     private PBox pLocation;
     private BufferedImage image;
@@ -27,7 +27,7 @@ public class MapImage {
     private int displayWidth;
     private int displayHeight;
 
-    protected MapImage(PBox pLocation, BufferedImage image, int displayWidth, int displayHeight) {
+    protected DisplayImage(PBox pLocation, BufferedImage image, int displayWidth, int displayHeight) {
         this.pLocation = pLocation;
         this.image = image;
         this.displayWidth = displayWidth;

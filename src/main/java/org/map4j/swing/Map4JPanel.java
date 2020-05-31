@@ -8,7 +8,7 @@ import javax.swing.JPanel;
 import org.map4j.coordinates.WCoordinate;
 import org.map4j.layers.MapLayer;
 import org.map4j.loaders.TileLoaderController;
-import org.map4j.render.MapImage;
+import org.map4j.render.DisplayImage;
 import org.map4j.render.MapRenderer;
 import org.map4j.render.MapRenderer.MapRendererTopicListener;
 
@@ -52,7 +52,7 @@ public class Map4JPanel extends JPanel implements MapRendererTopicListener {
         if (this.getPosition() != null) {
             Graphics2D g2d = (Graphics2D) g.create();
             try {
-                MapImage img = this.render.getDisplayImage();
+                DisplayImage img = this.render.getDisplayImage();
                 img.drawImageHeadsUp(heading, g2d);
             }
             catch (Exception ex) {
@@ -192,5 +192,21 @@ public class Map4JPanel extends JPanel implements MapRendererTopicListener {
         return render.getLayerRoot();
     }
     
+    
+    /**
+     * If set to TRUE, the drawing routine will wait until the image has completed its loading
+     * Painting the background. This makes for smoother painting (i.e. no image blink)
+     * when used with offline tile sources which have little delay for retrieving tiles. The
+     * default value is FALSE. 
+     * @param waitForCompleteImage
+     */
+    public void setWaitForCompleteImage(boolean waitForCompleteImage) {
+        render.setWaitForCompleteImage(waitForCompleteImage);
+    }
+
+    
+    public boolean isWaitForCompleteImage() {
+        return render.isWaitForCompleteImage();
+    }    
     
 }

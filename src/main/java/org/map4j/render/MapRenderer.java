@@ -1,6 +1,5 @@
 package org.map4j.render;
 
-import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 
@@ -11,9 +10,8 @@ import org.map4j.coordinates.WCoordinate;
 import org.map4j.layers.IMapObject;
 import org.map4j.layers.MapLayer;
 import org.map4j.layers.VisibleMapObjectVisitor;
-import org.map4j.loaders.Tile;
 import org.map4j.loaders.TileLoaderController;
-import org.map4j.loaders.Tile.TileTopicListener;
+import org.map4j.render.TileGridImage.TileGridImageTopicListener;
 import org.map4j.tinymq.TinyMQ;
 
 /**
@@ -27,7 +25,7 @@ import org.map4j.tinymq.TinyMQ;
  * 
  * @author Joel Kozikowski
  */
-public class MapRenderer implements TileTopicListener {
+public class MapRenderer implements TileGridImageTopicListener {
 
     public static TinyMQ<MapRenderer> broker = new TinyMQ<MapRenderer>();
     
@@ -41,20 +39,16 @@ public class MapRenderer implements TileTopicListener {
     private int displayWidth;
     private int displayHeight;
     private int pixelDisplayDiameter;
-
-    private BufferedImage baseImage;
-    private MapImage displayImage;
+    
+    private TileGridImage tileGridImage;
+    private DisplayImage displayImage;
     
     private TileLoaderController tileController;
-    private int pixelTileSize;
     private int zoomLevel;
-    private Tile[][] tileGrid;
-    private int tileGridSize;
+    private int tileGridSize;    
     private WCoordinate wCenter;
     private PCoordinate pCenter;
-    private TCoordinate tCenter;
-    private TCoordinate tileGridUL;
-   
+    private boolean waitForCompleteImage;
     
     public MapRenderer() {
         this(16);
@@ -67,12 +61,11 @@ public class MapRenderer implements TileTopicListener {
     
     
     public MapRenderer(int initialZoom, TileLoaderController tileController) {
-        this.pixelTileSize = 256;
         this.zoomLevel = initialZoom;
         if (tileController != null) {
             setTileLoaderController(tileController);
         }
-        Tile.broker.subscribe(Tile.TOPIC_LOADED, this);
+        TileGridImage.broker.subscribe(TileGridImage.TOPIC_UPDATED, this);
     }    
 
     
@@ -114,40 +107,48 @@ public class MapRenderer implements TileTopicListener {
      */
     public synchronized void clearRenderCache() {
         pCenter = null;
-        tCenter = null;
-        tileGridUL = null;
-        tileGrid = null;
+        this.discardTileGrid();
         
         this.displayImage = null;
     }
     
     
-    public synchronized void setDisplayDimensions(int displayWidth, int displayHeight) {
+    private void discardTileGrid() {
+        if (tileGridImage != null) {
+            tileGridImage.stop();
+        }
+        tileGridImage = null;
+    }
+    
+    
+    /**
+     * Sets the dimensions of the display so the renderer knows how large of an image
+     * to render when getDisplayImage() is called.
+     * @param displayWidth The width, in pixels, of the image needed to fill the display
+     * @param displayHeight The height, in pixels, of the image needed ot fill the display
+     */
+    public void setDisplayDimensions(int displayWidth, int displayHeight) {
 
-        // Cancel any loader jobs as we are about to re-calculate the entire tile grid...
-        tileController.cancelOutstandingJobs();
-        
-        this.displayWidth = displayWidth;
-        this.displayHeight = displayHeight;
-        
-        clearRenderCache();
-        
-        // Figure out the size in pixels of a square image that can be rotated and shifted by
-        // one tile yet still fill the entire display.
-        pixelDisplayDiameter = 2 * enclosingRadius(displayWidth, displayHeight);
-        
-        // How many tiles are required to compose that image box?
-        tileGridSize = (int)Math.ceil(pixelDisplayDiameter / this.pixelTileSize) + 2;
-        
-        tileGrid = new Tile[tileGridSize][tileGridSize];
-        
-        int masterImageSize = tileGridSize * this.pixelTileSize;
-        baseImage = new BufferedImage(masterImageSize, masterImageSize, BufferedImage.TYPE_INT_ARGB);
-        
-        displayImage = null;
-        
-        if (wCenter != null) {
-            recalcLocation(wCenter);
+        synchronized(this) {
+            this.discardTileGrid();
+            
+            this.displayWidth = displayWidth;
+            this.displayHeight = displayHeight;
+    
+            clearRenderCache();
+            
+            // Figure out the size in pixels of a square image that can be rotated and shifted by
+            // one tile yet still fill the entire display.
+            pixelDisplayDiameter = 2 * enclosingRadius(displayWidth, displayHeight);
+            
+            // How many tiles are required to compose that image box?
+            tileGridSize = (int)Math.ceil(pixelDisplayDiameter / TileGridImage.pixelTileSize) + 2;
+            
+            displayImage = null;
+            
+            if (wCenter != null) {
+                recalcLocation(wCenter);
+            }
         }
         
         broker.publish(TOPIC_CHANGED, this);
@@ -158,10 +159,16 @@ public class MapRenderer implements TileTopicListener {
      * Sets the "display location" (i.e. the center of the screen) to be the world
      * coordinates specified in displayLocation
      */
-    public synchronized void setDisplayLocation(WCoordinate displayLocation) {
-        if (this.wCenter == null || !this.wCenter.equals(displayLocation)) {
-            recalcLocation(displayLocation);
-            broker.publish(TOPIC_CHANGED, this);
+    public void setDisplayLocation(WCoordinate displayLocation) {
+        boolean notify = false;
+        synchronized(this) {
+            if (this.wCenter == null || !this.wCenter.equals(displayLocation)) {
+                recalcLocation(displayLocation);
+                notify = true;
+            }
+        }
+        if (notify) {
+           broker.publish(TOPIC_CHANGED, this);
         }
     }
      
@@ -179,11 +186,18 @@ public class MapRenderer implements TileTopicListener {
      * Sets the zoom level of the display to be the specified zoom level. This
      * will result in the display being redrawn.
      */
-    public synchronized void setZoomLevel(int zoomLevel) {
-        this.zoomLevel = zoomLevel;
-        if (this.wCenter != null) {
-           recalcLocation(this.wCenter);
-           broker.publish(TOPIC_CHANGED, this);
+    public void setZoomLevel(int zoomLevel) {
+        boolean notify = false;
+        synchronized(this) {
+            this.zoomLevel = zoomLevel;
+            if (this.wCenter != null) {
+               recalcLocation(this.wCenter);
+               notify = true;
+            }
+        }
+
+        if (notify) {
+            broker.publish(TOPIC_CHANGED, this);
         }
     }
     
@@ -227,25 +241,28 @@ public class MapRenderer implements TileTopicListener {
      * notification to any listeners, indicating the current display image needs 
      * be retrieved via call to getDisplayImage()
      */
-    public synchronized void refresh() {
-        renderGrid();
-        this.displayImage = null;
+    public void refresh() {
+        synchronized(this) {
+            if (tileGridImage != null) {
+                tileGridImage.refresh();
+            }
+            this.displayImage = null;
+        }
+        broker.publish(TOPIC_CHANGED, this);
+    }
+
+    
+    /**
+     * Respond to messages from the tile grid image about its loading status...
+     */    
+    @Override
+    public void onPublish(String topic, TileGridImage payload) {
+        synchronized (this) {
+            this.displayImage = null;
+        }
         broker.publish(TOPIC_CHANGED, this);
     }
     
-    
-    
-    /**
-     * Respond to messages from the tile message broker about their loading status...
-     */
-    @Override
-    public synchronized void onPublish(String topic, Tile tile) {
-        if (topic.equals(Tile.TOPIC_LOADED)) {
-            renderTile(tile);
-            broker.publish(TOPIC_CHANGED, this);
-        }
-    }
-
     
     /**
      * Returns the radius of the smallest circle that will enclose 
@@ -257,6 +274,7 @@ public class MapRenderer implements TileTopicListener {
     }
 
     
+    
     private void recalcLocation(WCoordinate displayLocation) {
        // The location has changed...
        this.wCenter = new WCoordinate(displayLocation);
@@ -266,61 +284,15 @@ public class MapRenderer implements TileTopicListener {
        
        if (this.displayWidth > 0 && this.displayHeight > 0) {
            // What should be the center tile (in XYZ tile space)...
-           TCoordinate centerTile = pCenter.asT(true);
-           if (tCenter == null || !centerTile.equals(tCenter)) {
+           TCoordinate tCenter = pCenter.asT(true);
+           if (tileGridImage == null || !tileGridImage.getTCenter().equals(tCenter)) {
                // We have a new center tile!
-               tCenter = centerTile;
-               recalcTileGrid();
+               this.discardTileGrid();
+               tileGridImage = new TileGridImage(tileController, pCenter, tileGridSize);
            }
        }
        displayImage = null;
     }
-    
-    
-    private void recalcTileGrid() {
-        // We are about to re-calculate the tile grid, so stop any pending load jobs...
-        tileController.cancelOutstandingJobs(); 
-
-        // Calculate the upper left of the tile grid (in XYZ tile space)...
-        tileGridUL = new TCoordinate(tCenter);
-        tileGridUL.adjustCol(-tileGridSize / 2);
-        tileGridUL.adjustRow(-tileGridSize / 2);
-        
-        renderGrid();
-        
-        displayImage = null;
-    }
-    
-    
-    private void renderGrid() {
-        TCoordinate tc = new TCoordinate(tileGridUL);
-        for (int col = 0; col < tileGridSize; col++) {
-           tc.setCol(tileGridUL.getCol());
-           for (int row = 0; row < tileGridSize; row++) {
-               tileGrid[col][row] = tileController.getTile(tc);
-               this.renderTile(tileGrid[col][row]);
-               tc.adjustCol(1);
-           } // col
-           tc.adjustRow(1);
-        } // row
-    }
-
-    private void renderTile(Tile tile) {
-        int colOffset = tile.coord.getCol() - tileGridUL.getCol();
-        int rowOffset = tile.coord.getRowAsXYZ() - tileGridUL.getRowAsXYZ();
-        
-        int x = colOffset * this.pixelTileSize;
-        int y = rowOffset * this.pixelTileSize;
-        
-        Graphics g = baseImage.getGraphics();
-        g.clearRect(x, y, this.pixelTileSize, this.pixelTileSize);
-        g.drawImage(tile.getImage(), x, y, null);
-        g.dispose();
-        
-        // Base image has changed - mark it dirty...
-        displayImage = null;
-    }
-    
     
     
     /**
@@ -328,10 +300,18 @@ public class MapRenderer implements TileTopicListener {
      * enough to rotate around its center, yet still fill the
      * displayWidth and displayHeight
      */
-    public synchronized MapImage getDisplayImage() {
+    public synchronized DisplayImage getDisplayImage() {
 
         if (displayImage == null) {
-            PCoordinate pTileGridUL = tileGridUL.asP();
+
+            if (this.waitForCompleteImage) {
+                while(!tileGridImage.isLoadCompleted()) {
+                    try { Thread.sleep(400); } catch (InterruptedException ex) {}
+                } // while
+            }
+            
+            
+            PCoordinate pTileGridUL = tileGridImage.getTileBox().t1.asP();
             
             int subImageCenterX = pCenter.getPixelX() - pTileGridUL.getPixelX();
             int subImageCenterY = pCenter.getPixelY() - pTileGridUL.getPixelY();
@@ -341,10 +321,10 @@ public class MapRenderer implements TileTopicListener {
             int displayCornerY = subImageCenterY - pixelDisplayRadius;
             
             // Make a new image...
-            BufferedImage newImage = new BufferedImage(pixelDisplayDiameter, pixelDisplayDiameter, baseImage.getType());
+            BufferedImage newImage = new BufferedImage(pixelDisplayDiameter, pixelDisplayDiameter, tileGridImage.getImage().getType());
             Graphics2D target2D = newImage.createGraphics();
             
-            target2D.drawImage(baseImage, 0, 0, pixelDisplayDiameter-1, pixelDisplayDiameter-1,
+            target2D.drawImage(tileGridImage.getImage(), 0, 0, pixelDisplayDiameter-1, pixelDisplayDiameter-1,
                                displayCornerX, displayCornerY, displayCornerX + pixelDisplayDiameter-1, displayCornerY + pixelDisplayDiameter-1, null);
             
             // Calculate a pixel box to represent the new image...
@@ -374,12 +354,11 @@ public class MapRenderer implements TileTopicListener {
             
             target2D.dispose();
             
-            displayImage = new MapImage(pImageBox, newImage, this.displayWidth, this.displayHeight);
+            displayImage = new DisplayImage(pImageBox, newImage, this.displayWidth, this.displayHeight);
         }
         
         return displayImage;
     }
-    
     
     private MapLayer layerRoot;
     
@@ -414,5 +393,23 @@ public class MapRenderer implements TileTopicListener {
         displayImage = null;
         broker.publish(TOPIC_CHANGED, this);
     }
+
+
+    /**
+     * If set to TRUE, the drawing routine will wait until the image has completed its loading
+     * before getDisplayImage() returns. This makes for smoother painting (i.e. no image blink)
+     * when used with offline tile sources which have little delay for retrieving tiles.  The
+     * default value is FALSE. 
+     * @param waitForCompleteImage
+     */
+    public void setWaitForCompleteImage(boolean waitForCompleteImage) {
+        this.waitForCompleteImage = waitForCompleteImage;
+    }
+
+    
+    public boolean isWaitForCompleteImage() {
+        return waitForCompleteImage;
+    }
+
     
 }
