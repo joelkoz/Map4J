@@ -41,13 +41,24 @@ public class MapMarkerImage extends MapMarkerCircle {
     public MapMarkerImage(BufferedImage imageSource, int imageWidth, int imageHeight, int imageIndex, String name, double lat, double lon) {
         super(name, lat, lon, Math.max(imageWidth, imageHeight));
         
+        this.markerImage = extractMarker(imageSource, imageWidth, imageHeight, imageIndex);
+    }
+
+    
+    /**
+     * Utility method used to extract an indexed subimage from a source image grid.
+     *  
+     * @return A new buffered image extracted from imageSource
+     */
+    public static BufferedImage extractMarker(BufferedImage imageSource, int imageWidth, int imageHeight, int imageIndex) {
         int numOfColumns = imageSource.getWidth() / imageWidth;
         int row = imageIndex / numOfColumns;
         int col = imageIndex % numOfColumns;
         
-        this.markerImage = imageSource.getSubimage(col * imageWidth, row * imageHeight, imageWidth, imageHeight);
+        return imageSource.getSubimage(col * imageWidth, row * imageHeight, imageWidth, imageHeight);
     }
 
+    
     
     @Override
     protected void paint(Graphics g, Point position, int drawRadius) {
