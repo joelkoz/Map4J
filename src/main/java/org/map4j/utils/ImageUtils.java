@@ -1,5 +1,7 @@
 package org.map4j.utils;
 
+import java.awt.AlphaComposite;
+import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
@@ -125,6 +127,47 @@ public class ImageUtils {
     }
     
 
+    
+    /**
+     * "Dyes" the specified image with the specified color. The dye is applied to
+     * the entire image
+     * @param image The source image
+     * @param color The "dye" color to use on the source image. It is important 
+     *     that this color's alpha channel be transparent to some degree
+     * @return A new buffered image with the dye color applied. The original image is unmodified
+     * @see #dye(BufferedImage, Color, int, int, int, int)
+     */
+    public static BufferedImage dye(BufferedImage image, Color dyeColor) {
+        return dye(image, dyeColor, 0, 0, image.getWidth(), image.getHeight());
+    }
+    
+    
+    /**
+     * "Dyes" the specified image with the specified color. This is done by
+     * doing an AlphaComposite over the image using dyeColor. 
+     * @param image The source image
+     * @param color The "dye" color to use on the source image. It is important 
+     *     that this color's alpha channel be transparent to some degree
+     * @param x x coordinate of rectangle in image to apply dye to
+     * @param y y coordinate of rectangle in image to apply dye to
+     * @param w width of rectangle in image to apply dye to
+     * @param h height of rectangle in image to apply dye to
+     * @return A new buffered image with the dye color applied. The original image is unmodified
+     */
+    public static BufferedImage dye(BufferedImage image, Color dyeColor, int x, int y, int w, int h)
+    {
+        BufferedImage dyed = new BufferedImage(w,h,BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g = dyed.createGraphics();
+        g.drawImage(image, 0,0, null);
+        g.setComposite(AlphaComposite.SrcAtop);
+        g.setColor(dyeColor);
+        g.fillRect(x,y,w,h);
+        g.dispose();
+        return dyed;
+    }    
+
+    
+    
     /**
      * Loads an image resource from path where path is the
      * complete path, starting from root. This is the best
