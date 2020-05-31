@@ -239,11 +239,14 @@ public class MapRenderer implements TileGridImageTopicListener {
     /**
      * Marks the current display image as invalid, then publishes a "changed"
      * notification to any listeners, indicating the current display image needs 
-     * be retrieved via call to getDisplayImage()
+     * be retrieved via call to getDisplayImage(). if reloadTiles is TRUE, the
+     * tile grid will also be invalidated and reloaded from the tile controller.
+     * Whether or not this causes a full reload depends on the state of the 
+     * tile controllers cache.
      */
-    public void refresh() {
+    public void refresh(boolean reloadTiles) {
         synchronized(this) {
-            if (tileGridImage != null) {
+            if (reloadTiles && tileGridImage != null) {
                 tileGridImage.refresh();
             }
             this.displayImage = null;
@@ -388,6 +391,13 @@ public class MapRenderer implements TileGridImageTopicListener {
     }
 
     
+    /**
+     * Sets whether or not the map layers/markers should be visible on the map.
+     * Calling this method invalidates the display image and causes all subscribers
+     * to be notified of the need for a redraw. You can call setMapLayersVisible(true)
+     * to get this effect any time a change is made to the map markers, even if the
+     * map layers are already visible.
+     */
     public void setMapLayersVisible(boolean visible) {
         layersVisible = visible;
         displayImage = null;

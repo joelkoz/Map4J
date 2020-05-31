@@ -140,8 +140,15 @@ public class Map4JPanel extends JPanel implements MapRendererTopicListener {
 
     
     
-    public void refresh() {
-        this.render.refresh();
+    /**
+     * Marks the current display image as invalid and causes the map panel
+     * to be redrawn and repainted. If reloadTiles is TRUE, the
+     * tile grid will also be invalidated and reloaded from the tile controller.
+     * Whether or not this causes a full reload depends on the state of the 
+     * tile controllers cache.
+     */
+    public void refresh(boolean reloadTiles) {
+        this.render.refresh(reloadTiles);
     }
     
    

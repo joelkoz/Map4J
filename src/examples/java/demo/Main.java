@@ -98,7 +98,7 @@ public class Main extends JFrame {
         btnRefresh.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                getMapPanel().refresh();
+                getMapPanel().refresh(true);
             }
         });
         panelBottom.add(btnRefresh);
