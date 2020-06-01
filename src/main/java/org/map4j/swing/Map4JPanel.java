@@ -88,8 +88,10 @@ public class Map4JPanel extends JPanel implements MapRendererTopicListener {
      * Sets the current display heading (in degrees 0..359) where 0 is "North up"
      */
     public void setHeading(int heading) {
-        this.heading = heading;
-        repaint();
+        if (this.heading != heading) {
+            this.heading = heading;
+            repaint();
+        }
     }
 
 
@@ -109,7 +111,9 @@ public class Map4JPanel extends JPanel implements MapRendererTopicListener {
      * @param location
      */
     public void setPosition(WCoordinate location) {
-        this.render.setDisplayLocation(location);;
+        if (!location.equals(this.render.getDisplayLocation())) {
+            this.render.setDisplayLocation(location);
+        }
     }
 
     
