@@ -117,4 +117,31 @@ public class WCoordinate implements IWorldCoordinate {
     public String toString() {
         return "(" + lat + ", " + lon + ")";
     }
+    
+    
+    /**
+     * Returns the WCoordinate of org with the latitude and longitude adjusted
+     * by the specified values (in meters).
+     * @param deltaLat Change in latitude, specified in meters
+     * @param deltaLon Change in longitude, specified in meters
+     */
+    public static WCoordinate adjustPosition(WCoordinate org, double deltaLat, double deltaLon) {
+        double r_earth = MapProjections.EARTH_RADIUS;
+        double new_lat  = org.lat  + (deltaLat / r_earth) * (180 / Math.PI);
+        double new_lon = org.lon + (deltaLon / r_earth) * (180 / Math.PI) / Math.cos(org.lat * Math.PI/180);
+        return new WCoordinate(new_lat, new_lon, org.proj);
+    }
+    
+    
+    /**
+     * Adjusts this coordinate with the specified adjustment values (in meters).
+     * @param deltaLat Change in latitude, specified in meters
+     * @param deltaLon Change in longitude, specified in meters
+     */
+    public void adjustPosition(double deltaLat, double deltaLon) {
+        WCoordinate newPos = adjustPosition(this, deltaLat, deltaLon);
+        setLat(newPos.lat);
+        setLon(newPos.lon);
+    }
+    
 }
