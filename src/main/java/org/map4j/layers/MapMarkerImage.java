@@ -14,7 +14,7 @@ import java.awt.image.BufferedImage;
  */
 public class MapMarkerImage extends MapMarkerCircle {
 
-    private BufferedImage markerImage;
+    protected BufferedImage markerImage;
     
 
     /**

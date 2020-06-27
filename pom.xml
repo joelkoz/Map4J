@@ -2,7 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.map4j</groupId>
   <artifactId>map4j</artifactId>
-  <version>0.5</version>
+  <version>0.6</version>
   <name>Map4j</name>
   <description>Mapping library for Java</description>
   <properties>
